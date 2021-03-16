@@ -1,0 +1,9 @@
+.git
+.gitignore
+azure-pipelines.yml
+LICENSE
+Makefile
+main_test.go
+README.*
+deploy
+testdata

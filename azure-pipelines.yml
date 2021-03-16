@@ -1,0 +1,112 @@
+# File : azure-pipelines.yml
+# Repository Root: $(System.DefaultWorkingDirectory)
+
+trigger:
+  - master
+
+variables:
+- group: 'cert-manager-webhook-loopia' # reference variable group
+- name: imageName
+  value: 'cert-manager-webhook-loopia'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# Download a specific version of the Go tool into the tools cache and add it to the PATH.
+# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/go-tool?view=azure-devops)
+- task: GoTool@0
+  displayName: Get Go.
+  inputs:
+    version: '1.16.2'
+
+# Go get dependencies.
+# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
+- task: Go@0
+  displayName: Go get dependencies
+  inputs:
+    command: 'get'
+    arguments: '-d'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+# Is this required??? Build cert-manager-webhook-loopia to /test directory
+# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
+#- task: Go@0
+#  displayName: Build cert-manager-webhook-loopia
+#  inputs:
+#    command: 'build'
+#    arguments: '-o $(System.DefaultWorkingDirectory)'
+#    workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+# Download required test binaries.
+# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.32._linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+# Download config.json as a secret file to the agent machine, this is automatically deleted when pipeline job is completed no matter it's outcome.
+# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/download-secure-file?view=azure-devops)
+- task: DownloadSecureFile@1
+  name: config_json # Referenced like this: $(config_json.secureFilePath)
+  inputs:
+    secureFile: 'config.json'
+
+# Copy config.json to test/
+# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/copy-files?view=azure-devops&tabs=yaml)
+- task: CopyFiles@2
+  inputs:
+    contents: '$(config_json.secureFilePath)'
+    targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/'
+    overWrite: true
+
+# Go perform test
+# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
+- task: Go@0
+  displayName: Test cert-manager-webhook-loopia
+  inputs:
+    command: 'test'
+    arguments: '-v'
+    workingDirectory: '$(modulePath)'
+  env:
+    TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
+
+# Remove test directory since it contains secrets.
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: 'rm -rf /testdata'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+# Build Docker image
+- task: Docker@2
+  displayName: Build Docker image
+  inputs:
+    repository: $(imageName)
+    command: build
+
+# Login to Docker Hub
+- task: Docker@2
+  displayName: Login to Docker Hub
+  inputs:
+    command: login
+    containerRegistry: $(dockerHub)
+
+# Push Docker image to Docker Hub.
+- task: Docker@2
+  displayName: Push Docker image to Docker Hub
+  inputs:
+    containerRegistry: |
+      $(dockerHub)
+    repository: $(imageName)
+    command: push
+    tags: |
+      v0.1
+      latest
+
+# TODO: Create Helm chart?
+
+# TODO: Push to Helm Repository?
+
+# TODO: Push to GitHub ?
