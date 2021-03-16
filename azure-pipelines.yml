@@ -91,7 +91,7 @@ steps:
   displayName: Login to Docker Hub
   inputs:
     command: login
-    containerRegistry: dockerHub
+    containerRegistry: $(dockerHub)
 
 # Push Docker image to Docker Hub.
 - task: Docker@2
