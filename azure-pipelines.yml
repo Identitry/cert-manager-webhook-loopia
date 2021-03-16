@@ -80,30 +80,30 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)'
 
 # Build Docker image
-- task: Docker@2
-  displayName: Build Docker image
-  inputs:
-    repository: $(imageName)
-    command: build
+#- task: Docker@2
+#  displayName: Build Docker image
+#  inputs:
+#    repository: $(imageName)
+#    command: build
 
 # Login to Docker Hub
-- task: Docker@2
-  displayName: Login to Docker Hub
-  inputs:
-    command: login
-    containerRegistry: $(dockerHub)
+#- task: Docker@2
+#  displayName: Login to Docker Hub
+#  inputs:
+#    command: login
+#    containerRegistry: $(dockerHub)
 
 # Push Docker image to Docker Hub.
-- task: Docker@2
-  displayName: Push Docker image to Docker Hub
-  inputs:
-    containerRegistry: |
-      $(dockerHub)
-    repository: $(imageName)
-    command: push
-    tags: |
-      v0.1
-      latest
+#- task: Docker@2
+#  displayName: Push Docker image to Docker Hub
+#  inputs:
+#    containerRegistry: |
+#      $(dockerHub)
+#    repository: $(imageName)
+#    command: push
+#    tags: |
+#      v0.1
+#      latest
 
 # TODO: Create Helm chart?
 
