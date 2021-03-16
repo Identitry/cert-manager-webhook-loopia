@@ -43,7 +43,7 @@ steps:
 - task: Bash@3
   inputs:
     targetType: 'inline'
-    script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.32._linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
+    script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.3.2_linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
 
 # Download config.json as a secret file to the agent machine, this is automatically deleted when pipeline job is completed no matter it's outcome.
