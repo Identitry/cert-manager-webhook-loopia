@@ -12,90 +12,102 @@ variables:
 - name: DOCKER_BUILDKIT
   value: 1
 
-pool:
-  vmImage: 'ubuntu-latest'
+jobs:
+- job: Test
+  displayName: 'Test'
+  pool:
+    vmImage: 'ubuntu-latest'
 
-steps:
-# Download a specific version of the Go tool into the tools cache and add it to the PATH.
-# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/go-tool?view=azure-devops)
-#- task: GoTool@0
-#  displayName: 'Get Go'
-#  inputs:
-#    version: '1.16.2'
+  steps:
 
-# Go get dependencies.
-# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
-#- task: Go@0
-#  displayName: 'Go get dependencies'
-#  inputs:
-#    command: 'get'
-#    arguments: '-d'
-#    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    # Download a specific version of the Go tool into the tools cache and add it to the PATH.
+    # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/go-tool?view=azure-devops)
+  - task: GoTool@0
+    displayName: 'Get Go'
+    inputs:
+      version: '1.16.2'
 
-    # Download required test binaries.
-# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
-#- task: Bash@3
-#  displayName: 'Download required test binaries'
-#  inputs:
-#    targetType: 'inline'
-#    script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.3.2_linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
-#    workingDirectory: '$(System.DefaultWorkingDirectory)'
+   # Go get dependencies.
+   # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
+  - task: Go@0
+    displayName: 'Go get dependencies'
+    inputs:
+      command: 'get'
+      arguments: '-d'
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-# Download loopia-credentials.yaml as a secret file to the agent machine, this is automatically deleted when pipeline job is completed no matter it's outcome.
-# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/download-secure-file?view=azure-devops)
-#- task: DownloadSecureFile@1
-#  displayName: 'Download loopia-credentials.yaml as a secret file'
-#  name: 'loopia_credentials' # Referenced like this: $(loopia_credentials.secureFilePath)
-#  inputs:
-#    secureFile: 'loopia-credentials.yaml'
+   # Download required test binaries.
+   # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
+  - task: Bash@3
+    displayName: 'Download required test binaries'
+    inputs:
+      targetType: 'inline'
+      script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.3.2_linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-# Copy loopia-credentials.yaml to testdata/loopia
-# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/copy-files?view=azure-devops&tabs=yaml)
-#- task: CopyFiles@2
-#  displayName: 'Copy loopia-credentials.yaml to testdata/loopia'
-#  inputs:
-#    SourceFolder: '$(Agent.TempDirectory)'
-#    contents: 'loopia-credentials.yaml'
-#    targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/'
-#    overWrite: true
+   # Download loopia-credentials.yaml as a secret file to the agent machine, this is automatically deleted when pipeline job is completed no matter it's outcome.
+   # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/download-secure-file?view=azure-devops)
+  - task: DownloadSecureFile@1
+    displayName: 'Download loopia-credentials.yaml as a secret file'
+    name: 'loopia_credentials' # Referenced like this: $(loopia_credentials.secureFilePath)
+    inputs:
+      secureFile: 'loopia-credentials.yaml'
 
-# Go perform test
-# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
-#- task: Go@0
-#  displayName: 'Test cert-manager-webhook-loopia'
-#  inputs:
-#    command: 'test'
-#    arguments: '-v'
-#    workingDirectory: '$(System.DefaultWorkingDirectory)'
-#  env:
-#    TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
+  # Copy loopia-credentials.yaml to testdata/loopia
+  # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/copy-files?view=azure-devops&tabs=yaml)
+  - task: CopyFiles@2
+    displayName: 'Copy loopia-credentials.yaml to testdata/loopia'
+    inputs:
+      SourceFolder: '$(Agent.TempDirectory)'
+      contents: 'loopia-credentials.yaml'
+      targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/'
+      overWrite: true
 
-# Remove testdata directory.
-#- task: Bash@3
-#  displayName: 'Remove testdata directory'
-#  inputs:
-#    targetType: 'inline'
-#    script: 'rm -rf /testdata'
-#    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  # Go perform test
+  # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
+  - task: Go@0
+    displayName: 'Test cert-manager-webhook-loopia'
+    inputs:
+      command: 'test'
+      arguments: '-v'
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    env:
+      TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
 
-# Login to Docker Hub
-- task: Docker@2
-  displayName: 'Login to Docker Hub'
-  inputs:
-    command: 'login'
-    containerRegistry: 'dockerHub'
+  # Remove testdata directory.
+  # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
+  - task: Bash@3
+    displayName: 'Remove testdata directory'
+    inputs:
+      targetType: 'inline'
+      script: 'rm -rf /testdata'
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-# Build and push Docker image
-- task: Docker@2
-  displayName: 'Build Docker image'
-  inputs:
-    containerRegistry: 'dockerHub'
-    repository: '$(dockerOrg)/$(imageName)'
-    command: 'buildAndPush'
-    tags: 'latest'
+- job: Build
+  displayName: 'Build and deploy'
+  pool:
+    vmImage: 'ubuntu-latest'
+
+    steps:
+
+    # Login to Docker Hub
+    # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/docker?view=azure-devops)
+    - task: Docker@2
+      displayName: 'Login to Docker Hub'
+      inputs:
+        command: 'login'
+        containerRegistry: 'dockerHub'
+
+    # Build and push Docker image
+    # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/docker?view=azure-devops)
+    - task: Docker@2
+      displayName: 'Build and push Docker image'
+      inputs:
+      containerRegistry: 'dockerHub'
+      repository: '$(dockerOrg)/$(imageName)'
+      command: 'buildAndPush'
+      tags: 'latest'
 
 # TODO: Create Helm chart?
 
 # TODO: Push to Helm Repository?
-
-# TODO: Push to GitHub ?
