@@ -97,9 +97,7 @@ steps:
     containerRegistry: dockerHub
     repository: $(imageName)
     command: push
-    tags: |
-      v0.1
-      latest
+    tags: v0.1
 
 # TODO: Create Helm chart?
 
