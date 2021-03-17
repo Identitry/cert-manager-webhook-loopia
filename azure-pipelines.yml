@@ -58,7 +58,7 @@ steps:
 - task: CopyFiles@2
   inputs:
     contents: '$(config_json.secureFilePath)'
-    targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/'
+    targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/config.json'
     overWrite: true
 
 # Go perform test
