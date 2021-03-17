@@ -47,13 +47,13 @@ steps:
     script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.3.2_linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-# Download config.json as a secret file to the agent machine, this is automatically deleted when pipeline job is completed no matter it's outcome.
+# Download loopia-credentials.yaml as a secret file to the agent machine, this is automatically deleted when pipeline job is completed no matter it's outcome.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/download-secure-file?view=azure-devops)
 - task: DownloadSecureFile@1
-  displayName: 'Download config.json as a secret file'
-  name: 'configjson' # Referenced like this: $(configjson.secureFilePath)
+  displayName: 'Download loopia-credentials.yaml as a secret file'
+  name: 'loopia_credentials' # Referenced like this: $(loopia_credentials.secureFilePath)
   inputs:
-    secureFile: 'config.json'
+    secureFile: 'loopia-credentials.yaml'
 
 # Copy config.json to testdata/loopia
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/copy-files?view=azure-devops&tabs=yaml)
@@ -61,9 +61,8 @@ steps:
   displayName: 'Copy config.json to testdata/loopia'
   inputs:
     SourceFolder: '$(Agent.TempDirectory)'
-    contents: 'config.json'
+    contents: 'loopia-credentials.yaml'
     targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/'
-    CleanTargetFolder: true
     overWrite: true
 
 # Go perform test
@@ -73,7 +72,6 @@ steps:
   inputs:
     command: 'test'
     arguments: '-v'
-    #workingDirectory: '$(modulePath)'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   env:
     TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
