@@ -76,13 +76,6 @@ steps:
 #    script: 'rm -rf /testdata'
 #    workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-# Build Docker image
-- task: Docker@2
-  displayName: 'Build Docker image'
-  inputs:
-    repository: '$(imageName)'
-    command: 'build'
-
 # Login to Docker Hub
 - task: Docker@2
   displayName: 'Login to Docker Hub'
@@ -90,13 +83,13 @@ steps:
     command: 'login'
     containerRegistry: 'dockerHub'
 
-# Push Docker image to Docker Hub.
+# Build and push Docker image
 - task: Docker@2
-  displayName: 'Push Docker image to Docker Hub'
+  displayName: 'Build Docker image'
   inputs:
     containerRegistry: 'dockerHub'
     repository: '$(imageName)'
-    command: 'push'
+    command: 'buildAndPush'
     tags: 'latest'
 
 # TODO: Create Helm chart?
