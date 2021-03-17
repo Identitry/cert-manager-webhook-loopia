@@ -95,11 +95,9 @@ steps:
   displayName: 'Push Docker image to Docker Hub'
   inputs:
     containerRegistry: 'dockerHub'
-    repository: 'identitry/$(imageName)'
+    repository: '$(imageName)'
     command: 'push'
-    tags: |
-      'v0.1'
-      'latest'
+    tags: 'latest'
 
 # TODO: Create Helm chart?
 
