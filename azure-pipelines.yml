@@ -1,5 +1,4 @@
 # File : azure-pipelines.yml
-# Repository Root: $(System.DefaultWorkingDirectory)
 
 trigger:
   - master
@@ -8,6 +7,9 @@ variables:
 - group: 'cert-manager-webhook-loopia' # reference variable group
 - name: imageName
   value: 'cert-manager-webhook-loopia'
+- name: DOCKER_BUILDKIT
+  value: 1
+
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -29,16 +31,7 @@ steps:
     arguments: '-d'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-# Is this required??? Build cert-manager-webhook-loopia to /test directory
-# (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
-#- task: Go@0
-#  displayName: Build cert-manager-webhook-loopia
-#  inputs:
-#    command: 'build'
-#    arguments: '-o $(System.DefaultWorkingDirectory)'
-#    workingDirectory: '$(System.DefaultWorkingDirectory)'
-
-# Download required test binaries.
+    # Download required test binaries.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
 - task: Bash@3
   displayName: 'Download required test binaries'
@@ -67,14 +60,14 @@ steps:
 
 # Go perform test
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
-- task: Go@0
-  displayName: 'Test cert-manager-webhook-loopia'
-  inputs:
-    command: 'test'
-    arguments: '-v'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  env:
-    TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
+#- task: Go@0
+#  displayName: 'Test cert-manager-webhook-loopia'
+#  inputs:
+#    command: 'test'
+#    arguments: '-v'
+#    workingDirectory: '$(System.DefaultWorkingDirectory)'
+#  env:
+#    TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
 
 # Remove testdata directory since it contains secrets.
 - task: Bash@3
@@ -85,30 +78,29 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)'
 
 # Build Docker image
-#- task: Docker@2
-#  displayName: Build Docker image
-#  inputs:
-#    repository: $(imageName)
-#    command: build
+- task: Docker@2
+  displayName: Build Docker image
+  inputs:
+    repository: $(imageName)
+    command: build
 
 # Login to Docker Hub
-#- task: Docker@2
-#  displayName: Login to Docker Hub
-#  inputs:
-#    command: login
-#    containerRegistry: $(dockerHub)
+- task: Docker@2
+  displayName: Login to Docker Hub
+  inputs:
+    command: login
+    containerRegistry: $(dockerHub)
 
 # Push Docker image to Docker Hub.
-#- task: Docker@2
-#  displayName: Push Docker image to Docker Hub
-#  inputs:
-#    containerRegistry: |
-#      $(dockerHub)
-#    repository: $(imageName)
-#    command: push
-#    tags: |
-#      v0.1
-#      latest
+- task: Docker@2
+  displayName: Push Docker image to Docker Hub
+  inputs:
+    containerRegistry: $(dockerHub)
+    repository: $(imageName)
+    command: push
+    tags:
+      v0.1
+      latest
 
 # TODO: Create Helm chart?
 
