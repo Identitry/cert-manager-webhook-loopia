@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/jetstack/cert-manager/test/acme/dns"
 )
@@ -25,6 +26,7 @@ func TestRunsSuite(t *testing.T) {
 		dns.SetManifestPath("testdata/loopia"),
 		dns.SetDNSServer("93.188.0.20:53"),
 		dns.SetUseAuthoritative(true),
+		dns.SetPollInterval(time.Second*15),
 	)
 
 	fixture.RunConformance(t)
