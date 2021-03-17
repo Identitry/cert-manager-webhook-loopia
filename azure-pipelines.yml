@@ -7,6 +7,8 @@ variables:
 - group: 'cert-manager-webhook-loopia' # reference variable group
 - name: imageName
   value: 'cert-manager-webhook-loopia'
+- name: dockerOrg
+  value: identitry
 - name: DOCKER_BUILDKIT
   value: 1
 
@@ -88,7 +90,7 @@ steps:
   displayName: 'Build Docker image'
   inputs:
     containerRegistry: 'dockerHub'
-    repository: '$(imageName)'
+    repository: '$(dockerOrg)/$(imageName)'
     command: 'buildAndPush'
     tags: 'latest'
 
