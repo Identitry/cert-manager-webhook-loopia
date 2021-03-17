@@ -59,22 +59,22 @@ steps:
 
 # Go perform test
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
-- task: Go@0
-  displayName: 'Test cert-manager-webhook-loopia'
-  inputs:
-    command: 'test'
-    arguments: '-v'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  env:
-    TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
+#- task: Go@0
+#  displayName: 'Test cert-manager-webhook-loopia'
+#  inputs:
+#    command: 'test'
+#    arguments: '-v'
+#    workingDirectory: '$(System.DefaultWorkingDirectory)'
+#  env:
+#    TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
 
 # Remove testdata directory.
-- task: Bash@3
-  displayName: 'Remove testdata directory'
-  inputs:
-    targetType: 'inline'
-    script: 'rm -rf /testdata'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
+#- task: Bash@3
+#  displayName: 'Remove testdata directory'
+#  inputs:
+#    targetType: 'inline'
+#    script: 'rm -rf /testdata'
+#    workingDirectory: '$(System.DefaultWorkingDirectory)'
 
 # Build Docker image
 - task: Docker@2
