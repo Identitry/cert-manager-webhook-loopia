@@ -16,14 +16,14 @@ steps:
 # Download a specific version of the Go tool into the tools cache and add it to the PATH.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/go-tool?view=azure-devops)
 - task: GoTool@0
-  displayName: Get Go.
+  displayName: 'Get Go'
   inputs:
     version: '1.16.2'
 
 # Go get dependencies.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
 - task: Go@0
-  displayName: Go get dependencies
+  displayName: 'Go get dependencies'
   inputs:
     command: 'get'
     arguments: '-d'
@@ -41,6 +41,7 @@ steps:
 # Download required test binaries.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
 - task: Bash@3
+  displayName: 'Download required test binaries'
   inputs:
     targetType: 'inline'
     script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.3.2_linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
@@ -49,22 +50,26 @@ steps:
 # Download config.json as a secret file to the agent machine, this is automatically deleted when pipeline job is completed no matter it's outcome.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/download-secure-file?view=azure-devops)
 - task: DownloadSecureFile@1
-  name: config_json # Referenced like this: $(config_json.secureFilePath)
+  displayName: 'Download config.json as a secret file'
+  name: 'configjson' # Referenced like this: $(configjson.secureFilePath)
   inputs:
     secureFile: 'config.json'
 
-# Copy config.json to test/
+# Copy config.json to testdata/loopia
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/copy-files?view=azure-devops&tabs=yaml)
 - task: CopyFiles@2
+  displayName: 'Copy config.json to testdata/loopia'
   inputs:
-    contents: '$(config_json.secureFilePath)'
-    targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/config.json'
+    SourceFolder: '$(Agent.TempDirectory)'
+    contents: 'config.json'
+    targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/'
+    CleanTargetFolder: true
     overWrite: true
 
 # Go perform test
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
 - task: Go@0
-  displayName: Test cert-manager-webhook-loopia
+  displayName: 'Test cert-manager-webhook-loopia'
   inputs:
     command: 'test'
     arguments: '-v'
@@ -73,8 +78,9 @@ steps:
   env:
     TEST_ZONE_NAME: $(LOOPIA_TEST_ZONE_NAME) # Maps the variable $(LOOPIA_TEST_ZONE_NAME) from cert-manager-webhook-loopia var group
 
-# Remove test directory since it contains secrets.
+# Remove testdata directory since it contains secrets.
 - task: Bash@3
+  displayName: 'Remove testdata directory'
   inputs:
     targetType: 'inline'
     script: 'rm -rf /testdata'
