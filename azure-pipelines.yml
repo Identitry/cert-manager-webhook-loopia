@@ -55,10 +55,10 @@ steps:
   inputs:
     secureFile: 'loopia-credentials.yaml'
 
-# Copy config.json to testdata/loopia
+# Copy loopia-credentials.yaml to testdata/loopia
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/copy-files?view=azure-devops&tabs=yaml)
 - task: CopyFiles@2
-  displayName: 'Copy config.json to testdata/loopia'
+  displayName: 'Copy loopia-credentials.yaml to testdata/loopia'
   inputs:
     SourceFolder: '$(Agent.TempDirectory)'
     contents: 'loopia-credentials.yaml'

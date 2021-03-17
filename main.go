@@ -173,6 +173,11 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		}
 	}
 
+	// TODO: Remove sub domain if only 1 record was returned.
+	//if len(zoneRecords) <= 0 {
+	//	loopiaClient.RemoveSubDomain(domain,subbomain) // Not implemented in Loopia-Go yet.
+	//}
+
 	return nil
 }
 
