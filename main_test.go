@@ -23,7 +23,6 @@ func TestRunsSuite(t *testing.T) {
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),
 		dns.SetManifestPath("testdata/loopia"),
-		dns.SetDNSServer("93.188.0.20:53"),
 		dns.SetUseAuthoritative(true),
 	)
 
