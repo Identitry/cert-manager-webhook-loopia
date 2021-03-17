@@ -32,30 +32,30 @@ steps:
 
     # Download required test binaries.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
-- task: Bash@3
-  displayName: 'Download required test binaries'
-  inputs:
-    targetType: 'inline'
-    script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.3.2_linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
+#- task: Bash@3
+#  displayName: 'Download required test binaries'
+#  inputs:
+#    targetType: 'inline'
+#    script: 'curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.3.2_linux_amd64.tar.gz | tar xvz --strip-components=1 -C $(System.DefaultWorkingDirectory)/testdata/'
+#    workingDirectory: '$(System.DefaultWorkingDirectory)'
 
 # Download loopia-credentials.yaml as a secret file to the agent machine, this is automatically deleted when pipeline job is completed no matter it's outcome.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/download-secure-file?view=azure-devops)
-- task: DownloadSecureFile@1
-  displayName: 'Download loopia-credentials.yaml as a secret file'
-  name: 'loopia_credentials' # Referenced like this: $(loopia_credentials.secureFilePath)
-  inputs:
-    secureFile: 'loopia-credentials.yaml'
+#- task: DownloadSecureFile@1
+#  displayName: 'Download loopia-credentials.yaml as a secret file'
+#  name: 'loopia_credentials' # Referenced like this: $(loopia_credentials.secureFilePath)
+#  inputs:
+#    secureFile: 'loopia-credentials.yaml'
 
 # Copy loopia-credentials.yaml to testdata/loopia
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/copy-files?view=azure-devops&tabs=yaml)
-- task: CopyFiles@2
-  displayName: 'Copy loopia-credentials.yaml to testdata/loopia'
-  inputs:
-    SourceFolder: '$(Agent.TempDirectory)'
-    contents: 'loopia-credentials.yaml'
-    targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/'
-    overWrite: true
+#- task: CopyFiles@2
+#  displayName: 'Copy loopia-credentials.yaml to testdata/loopia'
+#  inputs:
+#    SourceFolder: '$(Agent.TempDirectory)'
+#    contents: 'loopia-credentials.yaml'
+#    targetFolder: '$(System.DefaultWorkingDirectory)/testdata/loopia/'
+#    overWrite: true
 
 # Go perform test
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
@@ -88,7 +88,7 @@ steps:
   displayName: Login to Docker Hub
   inputs:
     command: login
-    containerRegistry: $(dockerHub)
+    containerRegistry: dockerHub
 
 # Push Docker image to Docker Hub.
 - task: Docker@2
