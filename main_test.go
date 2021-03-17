@@ -27,6 +27,7 @@ func TestRunsSuite(t *testing.T) {
 		dns.SetDNSServer("93.188.0.20:53"),
 		dns.SetUseAuthoritative(true),
 		dns.SetPollInterval(time.Second*15),
+		dns.SetPropagationLimit(time.Minute*10),
 	)
 
 	fixture.RunConformance(t)
