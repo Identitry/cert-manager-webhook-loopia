@@ -97,7 +97,7 @@ steps:
     containerRegistry: dockerHub
     repository: $(imageName)
     command: push
-    tags:
+    tags: |
       v0.1
       latest
 
