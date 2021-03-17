@@ -16,19 +16,19 @@ pool:
 steps:
 # Download a specific version of the Go tool into the tools cache and add it to the PATH.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/go-tool?view=azure-devops)
-- task: GoTool@0
-  displayName: 'Get Go'
-  inputs:
-    version: '1.16.2'
+#- task: GoTool@0
+#  displayName: 'Get Go'
+#  inputs:
+#    version: '1.16.2'
 
 # Go get dependencies.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/build/go?view=azure-devops)
-- task: Go@0
-  displayName: 'Go get dependencies'
-  inputs:
-    command: 'get'
-    arguments: '-d'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
+#- task: Go@0
+#  displayName: 'Go get dependencies'
+#  inputs:
+#    command: 'get'
+#    arguments: '-d'
+#    workingDirectory: '$(System.DefaultWorkingDirectory)'
 
     # Download required test binaries.
 # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
