@@ -20,13 +20,11 @@ func TestRunsSuite(t *testing.T) {
 
 	solver := &loopiaDNSProviderSolver{}
 	fixture := dns.NewFixture(solver,
-		dns.SetStrict(true),
+		//	dns.SetStrict(true),
 		dns.SetBinariesPath("testdata/bin"),
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),
 		dns.SetManifestPath("testdata/loopia"),
-		//dns.SetDNSServer("93.188.0.20:53"),
-		//dns.SetUseAuthoritative(true),
 		dns.SetPollInterval(time.Second*60),
 		dns.SetPropagationLimit(time.Minute*30),
 	)
