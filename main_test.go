@@ -20,6 +20,7 @@ func TestRunsSuite(t *testing.T) {
 
 	solver := &loopiaDNSProviderSolver{}
 	fixture := dns.NewFixture(solver,
+		dns.SetStrict(true),
 		dns.SetBinariesPath("testdata/bin"),
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),
