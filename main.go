@@ -252,19 +252,3 @@ func (c *loopiaDNSProviderSolver) getCredentials(cfg *loopiaDNSProviderConfig, n
 
 	return &creds, nil
 }
-
-// TODO: Would this cleaner solution work for getting the credentials from secret?
-/*
-func (c *civoDNSProviderSolver) getSecretData(secretName string, ns string) (string, error) {
-	secret, err := c.client.CoreV1().Secrets(ns).Get(c.ctx, secretName, metav1.GetOptions{})
-	if err != nil {
-		return "", fmt.Errorf("failed to load secret %s/%s: %w", ns, secretName, err)
-	}
-
-	if data, ok := secret.Data["api-key"]; ok {
-		return string(data), nil
-	}
-
-	return "", fmt.Errorf("no key %s in secret %s/%s", "api-key", ns, secretName)
-}
-*/

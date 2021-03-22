@@ -25,7 +25,7 @@ func TestRunsSuite(t *testing.T) {
 		dns.SetAllowAmbientCredentials(false),
 		dns.SetManifestPath("testdata/loopia"),
 		dns.SetDNSServer("93.188.0.20:53"),
-		dns.SetUseAuthoritative(true),
+		//dns.SetUseAuthoritative(true),
 		dns.SetPollInterval(time.Second*15),
 		dns.SetPropagationLimit(time.Minute*30),
 	)

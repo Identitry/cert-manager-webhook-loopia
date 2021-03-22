@@ -85,6 +85,8 @@ jobs:
 
 - job: Build
   displayName: 'Build and deploy'
+  dependsOn: Test
+  condition: succeeded()
   pool:
     vmImage: 'ubuntu-latest'
 
