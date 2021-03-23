@@ -5,13 +5,30 @@
 ## Table of Contents
 
 1. [Overview](#overview)
+
+   1.1. [Building](#building)
+
+   1.2. [Docker Image](#image)
+
+   1.3. [Compability](#compability)
 2. [Installation](#installation)
 
    2.1. [Prereqs](#prereqs)
 
-   2.2. [Secret Loopia API credential](#creds)
+   2.2. [Install Cert-Manager](#cert-manager)
 
-   2.2. [Install Loopia Webhook](#webhookinstall)
+   2.3. [Install/Uninstall Loopia Webhook](#webhookinstall)
+
+3. [Using the Loopia Webhook](#webhookusing)
+
+   3.1. [Loopia API credential Secret](#credentials)
+
+   3.2. [Cert-Manager Issuer configuration](#issuer)
+
+   3.3. [Cert-Manager Certificate configuration](#certificate)
+
+   3.4. [Troubleshooting](#troubleshooting)
+4. [Conformance Testing](#testing)
 
 
 <a name="overview"></a>
@@ -23,11 +40,36 @@ The main issuer of public certificates using the ACME-protocol is [Let´s Encryp
 
 The [ACME DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) is one of two diiferent challenges (the other is [HTTP-01](https://letsencrypt.org/docs/challenge-types/#http-01-challenge)) that you as a user of Let´s Encrypt certificates could use to prove you´re the owner of the domain the certificate is to be issued for. ACME DNS-01 challenge has an advantage over HTTP-01 in that it allows for issuance of wildcard certificates. ACME DNS-01 challenge requires you to be able to automatically add a DNS TXT record to your public DNS zone as a proof of ownership of the domain.
 
+The role of `cert-manager-webhook-loopia` is to act as a DNS-provider and create a DNS TXT-record in the _acme-challenge sub domain of the domain a certificate should be issued for, for example: _acme-challenge.example.com. The value the TXT-record should contain is supplied by the ACME issuer. When the DNS01 challenge is complete, `cert-manager-webhook-loopia` is responsible for cleaning up the TXT-records created. Currently `cert-manager-webhook-loopia` can´t delete the _acme-challenge sub domain due to lack of functionality in the [Loopia-Go client](https://github.com/jonlil/loopia-go) used but TXT records are removed.
+
 [Loopia](https://loopia.com) is a major hosting company based in Sweden but has subsidaries in Norway and Serbia but also offers services to companies and individuals in the rest of the world.
 
-[Loopia API](https://www.loopia.com/api) that is used by `cert-manager-webhook-loopia` is an API based on XMLRPC that allows for reading and editing of your DNS domain(s) hosted at Loopia. This API becomes very handy when we need to request a lot of certificates automatically and also renew these when they expire.
+[Loopia API](https://www.loopia.com/api) that is used by `cert-manager-webhook-loopia` is an API based on XMLRPC that allows for reading and editing of your DNS domain(s) hosted at Loopia. This API becomes very handy when we need to request a lot of certificates automatically and also renew these when they expire. [Loopia-Go client](https://github.com/jonlil/loopia-go) is the client library used for communicating with Loopia API.
+
+---
+**NOTE**
+
+You need to register for special Loopia API user credentials, this is also required for testing.
+https://customerzone.loopia.com/
+
+---
 
 ![Loopia API Logo](https://static.loopia.se/loopiaweb/images/logos/loopia-api-logo.png "Loopia API Logo")
+
+<a name="building"></a>
+### 1.1. Building
+Build the container image `cert-manager-webhook-loopia:latest`
+
+    make build
+
+<a name="image"></a>
+### 1.2. Docker Image
+An image is hosted on Docker Hub:
+[identitry/cert-manager-webhook-loopia](https://hub.docker.com/repository/docker/identitry/cert-manager-webhook-loopia)
+
+<a name="compability"></a>
+### 1.3. Compatibility
+This webhook has been tested with [cert-manager] v1.2.0 and Kubernetes v1.20.x on `amd64`.
 
 <a name="installation"></a>
 ## 2. Installation
@@ -35,243 +77,201 @@ The [ACME DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01
 <a name="prereqs"></a>
 ### 2.1. Prereqs
 
-Before starting the installation of `cert-manager-webhook-loopia` the prerequisite is that you have a working Kubernetes cluster, either in the cloud or on bare metal and that you have deployed Cert-Manager already on your cluster.
+Before starting the installation of `cert-manager-webhook-loopia` the prerequisite is that you have a working Kubernetes cluster, either in the cloud or on bare metal.
 You could of course use [Cert-Manager] and `cert-manager-webhook-loopia` on [Minikube](https://minikube.sigs.k8s.io/docs/), [Microk8s](https://microk8s.io/), [K3s](https://k3s.io/) or [Docker Desktop with Kubernetes enabled](https://www.docker.com/products/docker-desktop).
-The installation also require that you have registered for Loopia API credentials in the [Loopia CustomerZone], these special credentials are required for `cert-manager-webhook-loopia` to work.
+The installation also require that you have registered for Loopia API credentials in the [Loopia CustomerZone](https://customerzone.loopia.com), these special credentials are required for `cert-manager-webhook-loopia` to work.
 
 <a name="prereqs"></a>
-### 2.2. Secret Loopia API credential
 
-In order to logon to the [Loopia API](https://www.loopia.com/api) you first need a set of credentials, as a customer with Loopia you can request these in the [Loopia Customer Zone], the usual credentials we normally use to logon with Loopia wont work.
-When we have the Loopia API credentials (username and password) we need to store the credentials safely within Kubernetes and Kubernetes has a special API object type, [Secret](https://kubernetes.io/docs/concepts/configuration/secret) that can be used for this.
+### 2.2. Install Cert-Manager
+The easiest way to install Cert-Manager is using Helm. For this Helm v3 needs to be installed already.
+This is how to install Cert-Manager using Helm, if you wish to install using manifests or using other options you can use this [instruction](https://cert-manager.io/docs/installation/kubernetes).
 
-This is the secret configuration we need to apply to Kubernetes:
+Add the Jetstack Helm Repository:
+
+    helm repo add jetstack https://charts.jetstack.io
+
+Update Helm chart repository cache:
+
+    helm repo update
+
+Install Cert-Manager (with CRD´s):
+
+    helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.2.0 --create-namespace --set installCRDs=true
+
+Verify Cert-Manager installation by getting the cert-manager running pods:
+
+    kubectl get pods --namespace cert-manager
+
+    NAME                                       READY   STATUS    RESTARTS   AGE
+    cert-manager-85f9bbcd97-666mx              1/1     Running   0          2m
+    cert-manager-cainjector-74459fcc56-r6dc8   1/1     Running   0          2m
+    cert-manager-webhook-57d97ccc67-jngx8      1/1     Running   0          2m
+
+Note that it might take a minute or two before all pods are running.
+
+<a name="webhookinstall"></a>
+### 2.3. Install/Uninstall Loopia Webhook
+The `cert-manager-webhook-loopia` can be installed in multiple ways but the easiest is using helm. First you need to have this repository pulled locally then you can run this command from the root folder:
+
+    helm install cert-manager-webhook-loopia --namespace cert-manager --set image.tag=latest --set logLevel=2 deploy/cert-manager-webhook-loopia
+
+This will install a heml chart with the pre built image available in Docker Hub as identitry/cert-manager-webhook-loopia.
+
+
+If you wish to uninstall `cert-manager-webhook-loopia` simply run this command:
+
+    helm uninstall cert-manager-webhook-loopia --namespace cert-manager
+
+
+<a name="#webhookusing"></a>
+## 3. Using the Loopia Webhook
+Ok, now you have probably installed `cert-manager-webhook-loopia`, it´s time to configure it for getting a certificate from Let´s Encrypt.
+
+<a name="#credentials"></a>
+### 3.1. Loopia API credential Secret
+
+In order to logon to the [Loopia API](https://www.loopia.com/api) you first need a set of credentials, as a customer with Loopia you can request these in the [Loopia Customer Zone](https://customerzone.loopia.com), the usual credentials we normally use to logon with Loopia wont work.
+When we have the Loopia API credentials (username and password) we need to store these credentials safely within Kubernetes and Kubernetes has a special API object type, [Secret](https://kubernetes.io/docs/concepts/configuration/secret) that can be used for this.
+
+The Secret needs to be created in the "cert-manager" namespace, otherwise permissions needs to be given for cert-manager to use the Secret.
+This is the secret configuration we need to apply to Kubernetes, you can find this file in the configuration/ folder. Replace the username and password with your Loopia API credentials:
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: loopia-api-credentials
+  name: loopia-credentials
+  namespace: cert-manager
 stringData:
-  username: <your Loopia API username goes here>
-  password: <your Loopia API password goes here>
+  username: "LOOPIA API USERNAME"
+  password: "LOOPIA API PASSWORD"
 ```
 
-<a name="webhookinstall"></a>
-### 2.3. Install Loopia Webhook
-The `cert-manager-webhook-loopia` can be installed in multiple ways, these are the options:
+Then deploy the Secret to Kubernetes using this command:
 
+    kubectl apply -f configuration/loopia-credentials.yaml
 
+You can also deploy the secret using this command, replace the username and password with your Loopia API credentials.
 
-## Building
-Build the container image `cert-manager-webhook-loopia:latest`:
+    kubectl create secret generic loopia-credentials --namespace cert-manager --from-literal=username='LOOPIA API USERNAME' --from-literal=password='LOOPIA API PASSWORD'
 
-    make build
+To remove the Secret, run this command:
 
+    kubectl delete secret loopia-credentials --namespace cert-manager
 
-## Image
-Ready made images are hosted on Docker Hub ([image tags]). Use at your own risk:
 
-    bwolf/cert-manager-webhook-loopia
+<a name="issuer"></a>
+### 3.2 Cert-Manager Issuer configuration
+Issuers and ClusterIssuers, are Kubernetes resources that represent certificate authorities (CAs) that are able to generate signed certificates. An Issuer is limited to a single namespace whereas a ClusterIssuer can issue certificates for the whole cluster.
+The example yaml below is for creating a ClusterIssuer but you can just change "ClusterIssuer" to "Issuer" if you like to restrict the certificate to a single namespace.
 
+You also need to replace the email adress to your real email adress, Let´s Encrypt needs this to identify you as a subscriber and holder of the private key. This email adress will also recieve warnings of expiring certs and notifications about changes to [Let´s Encrypts privacy policy](https://letsencrypt.org/privacy).
 
-### Release History
-Refer to the [ChangeLog](ChangeLog.md) file.
+The ClusterIssuer example below is targeted [Let´s Encrypts staging environment](https://letsencrypt.org/docs/staging-environment), this will allow you to get things right before issuing trusted certificates and reduce the chance of your running up against rate limits.
+When you have successfully tested your configuration you can remove the staging ClusterIssuer and replace it with a production one pointing to the Let´s Encrypt production environment, changing the name and the name of the Secret where the issued certificate should end up.
 
+The example below is also available as configuration/le-staging-clusterissuer.yaml.
 
-## Compatibility
-This webhook has been tested with [cert-manager] v0.13.1 and Kubernetes v0.17.x on `amd64`. In theory it should work on other hardware platforms as well but no steps have been taken to verify this. Please drop me a note if you had success.
+```yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # The ACME server URL for testing.
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
 
+    # The ACME server URL for production.
+    # server: https://acme-v02.api.letsencrypt.org/directory
 
-## Testing with Minikube
-1. Build this webhook in Minikube:
+    # You must replace this email address with your own.
+    # Let's Encrypt will use this to contact you about expiring
+    # certificates, and issues related to your account.
+    email: hostmaster@example.com
 
-        minikube start --memory=4G --more-options
-        eval $(minikube docker-env)
-        make build
-        docker images | grep webhook
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging
 
-2. Install [cert-manager] with [Helm]:
-
-        kubectl create namespace cert-manager
-        kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/v0.13.1/deploy/manifests/00-crds.yaml
-
-        helm repo add jetstack https://charts.jetstack.io
-        helm install cert-manager --namespace cert-manager \
-            --set 'extraArgs={--dns01-recursive-nameservers=8.8.8.8:53\,1.1.1.1:53}' \
-            jetstack/cert-manager
-
-        kubectl get pods --namespace cert-manager --watch
-
-    **Note**: refer to Name servers in the official [documentation][setting-nameservers-for-dns01-self-check] according the `extraArgs`.
-
-    **Note**: ensure that the custom CRDS of cert-manager match the major version of the cert-manager release by comparing the URL of the CRDS with the helm info of the charts app version:
-
-            helm search repo jetstack
-
-    Example output:
-
-            NAME                    CHART VERSION   APP VERSION     DESCRIPTION
-            jetstack/cert-manager   v0.13.1         v0.13.1         A Helm chart for cert-manager
-
-    Check the state and ensure that all pods are running fine (watch out for any issues regarding the `cert-manager-webhook-` pod  and its volume mounts):
-
-            kubectl describe pods -n cert-manager | less
-
-
-3. Create the secret to keep the Loopia API key in the default namespace, where later on the Issuer and the Certificate are created:
-
-        kubectl create secret generic loopia-credentials \
-            --from-literal=api-token='<LOOPIA-API-KEY>'
-
-    **Note**: See [RBAC Authorization]:
-
-    > A Role can only be used to grant access to resources within a single namespace.
-
-    *As far as I understand cert-manager, the `Secret` must reside in the same namespace as the `Issuer` and `Certificate` resource.*
-
-4. Grant permission for the service-account to access the secret holding the Loopia API key:
-
-        kubectl apply -f rbac.yaml
-
-5. Deploy this locally built webhook (add `--dry-run` to try it and `--debug` to inspect the rendered manifests; Set `logLevel` to 6 for verbose logs):
-
-        helm install cert-manager-webhook-loopia \
-            --namespace cert-manager \
-            --set image.repository=cert-manager-webhook-loopia \
-            --set image.tag=latest \
-            --set logLevel=2 \
-            ./deploy/cert-manager-webhook-loopia
-
-    To deploy using the image from Docker Hub (for example using the `v0.1.1` tag):
-
-        helm install cert-manager-webhook-loopia \
-            --namespace cert-manager \
-            --set image.tag=v0.1.1 \
-            --set logLevel=2 \
-            ./deploy/cert-manager-webhook-loopia
-
-    Check the logs
-
-            kubectl get pods -n cert-manager --watch
-            kubectl logs -n cert-manager cert-manager-webhook-loopia-XYZ
-
-6. Create a staging issuer (email addresses with the suffix `example.com` are forbidden):
-
-        cat << EOF | sed "s/invalid@example.com/$email/" | kubectl apply -f -
-        apiVersion: cert-manager.io/v1alpha2
-        kind: Issuer
-        metadata:
-          name: letsencrypt-staging
-          namespace: default
-        spec:
-          acme:
-            # The ACME server URL
-            server: https://acme-staging-v02.api.letsencrypt.org/directory
-            # Email address used for ACME registration
-            email: invalid@example.com
-            # Name of a secret used to store the ACME account private key
-            privateKeySecretRef:
-              name: letsencrypt-staging
-            solvers:
-            - dns01:
-                webhook:
-                  groupName: acme.bwolf.me
-                  solverName: loopia
-                  config:
-                    apiKeySecretRef:
-                      key: api-token
-                      name: loopia-credentials
-        EOF
-
-    Check status of the Issuer:
-
-        kubectl describe issuer letsencrypt-staging
-
-    *Note*: The production Issuer is [similar][ACME documentation].
-
-7. Issue a [Certificate] for your `$DOMAIN`:
-
-        cat << EOF | sed "s/example-com/$DOMAIN/" | kubectl apply -f -
-        apiVersion: cert-manager.io/v1alpha2
-        kind: Certificate
-        metadata:
-          name: example-com
-        spec:
-          dnsNames:
-          - example-com
-          issuerRef:
-            name: letsencrypt-staging
-          secretName: example-com-tls
-        EOF
-
-    Check the status of the Certificate:
-
-        kubectl describe certificate $DOMAIN
-
-    Display the details like the common name and subject alternative names:
-
-        kubectl get secret $DOMAIN-tls -o yaml
-
-8. Issue a wildcard Certificate for your `$DOMAIN`:
-
-        cat << EOF | sed "s/example-com/$DOMAIN/" | kubectl apply -f -
-        apiVersion: cert-manager.io/v1alpha2
-        kind: Certificate
-        metadata:
-          name: wildcard-example-com
-        spec:
-          dnsNames:
-          - '*.example-com'
-          issuerRef:
-            name: letsencrypt-staging
-          secretName: wildcard-example-com-tls
-        EOF
-
-    Check the status of the Certificate:
-
-        kubectl describe certificate $DOMAIN
-
-    Display the details like the common name and subject alternative names:
-
-        kubectl get secret wildcard-$DOMAIN-tls -o yaml
-
-99. Uninstall this webhook:
-
-        helm uninstall cert-manager-webhook-loopia --namespace cert-manager
-        kubectl delete -f rbac.yaml
-        kubectl delete loopia-credentials
-
-100. Uninstalling cert-manager:
-This is out of scope here. Refer to the official [documentation][cert-manager-uninstall].
-
-
-## Development
-**Note**: If some tool (IDE or build process) fails resolving a dependency, it may be the cause that a indirect dependency uses `bzr` for versioning. In such a case it may help to put the `bzr` binary into `$PATH` or `$GOPATH/bin`.
-
-
-## Release process
-- Code changes result in a new image version and Git tag
-- Helm chart changes result in a new chart version
-- All other changes are pushed to master
-- All versions are to be documented in [ChangeLog](ChangeLog.md)
-
-
-## Conformance test
-Please note that the test is not a typical unit or integration test. Instead it invokes the web hook in a Kubernetes-like environment which asks the web hook to really call the DNS provider (.i.e. Loopia). It attempts to create an `TXT` entry like `cert-manager-dns01-tests.example.com`, verifies the presence of the entry via Google DNS. Finally it removes the entry by calling the cleanup method of web hook.
-
-**Note**: Replace the string `darwin` in the URL below with an OS matching your system (e.g. `linux`).
-
-As said above, the conformance test is run against the real Loopia API. Therefore you *must* have a Loopia account, a domain and an API key.
-
-``` shell
-cp testdata/loopia/api-key.yaml.sample testdata/loopia/api-key.yaml
-echo -n $YOUR_LOOPIA_API_KEY | base64 | pbcopy # or xclip
-$EDITOR testdata/loopia/api-key.yaml
-./scripts/fetch-test-binaries.sh
-TEST_ZONE_NAME=example.com. go test -v .
+    solvers:
+      - dns01:
+          webhook:
+            groupName: acme.webhook.loopia.com
+            solverName: loopia
+            config:
+              usernameSecretKeyRef:
+                name: loopia-credentials
+                key: username
+              passwordSecretKeyRef:
+                name: loopia-credentials
+                key: password
 ```
 
+To deploy the Cluster Issuer configuration file after you have edit it you can run this command:
+
+    kubectl apply -f configuration/le-staging-clusterissuer.yaml
+
+Afterwards, check the status of the Cluster Issuer.
+
+    kubectl describe clusterissuer letsencrypt-staging
+
+To delete the Cluster Issuer, run this command:
+
+    kubectl delete clusterissuer letsencrypt-staging
+
+<a name="certificate"></a>
+### 3.3. Cert-Manager Certificate configuration
+Time to wrap this up, the final Kubernetes resource we need is a Certificate. The [Certificate resource](https://cert-manager.io/docs/usage/certificate) represents a human readable definition of a certificate request that is to be honored by an issuer which is to be kept up-to-date.
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: staging-cert-example-com
+spec:
+  commonName: example.com # REPLACE THIS WITH YOUR DOMAIN
+  dnsNames:
+  - example.com # REPLACE THIS WITH YOUR DOMAIN
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  secretName: example-com-tls
+```
+
+To check the status of the certificate you can run this command:
+
+    kubectl describe certificate staging-cert-example-com
+
+
+If you wish to delete the Certificate, run this command:
+
+    kubectl delete certificate staging-cert-example-com
+
+<a name="troubleshooting"></a>
+### 3.4. Troubleshooting
+
+Cert-Manager has a great page that describes how to do [troubleshooting](https://cert-manager.io/docs/faq/troubleshooting).
+
+<a name="testing"></a>
+## 4. Conformance Testing
+
+The testing of a cert-manager weebhook is a bit special and not a typical unit or integration test, instead there´s a test-fixure supplied that build up a complete Kubernetes control plane where testing is performed. This not only requires you to download a set of test binaries but also prepare some files for testing.
+
+**testdata/scripts/fetch-test-binaries.sh**:<br>
+Script for downloading test binaries, this script is limited to Linux/Amd64 but other OS/architecture versions are available.
+
+**testdata/loopia/config.json**:<br>
+This is a config file that basically informs the test fixture how to find the Kubernetes secret and keys that contains the Loopia API username and password.
+
+**testdata/loopia/loopia-credentials.yaml**:<br>
+A Kubernetes secret configuration that will be applied to the Kubernetes control plane during test. Real Loopia API credentials is required since the tests connects to Loopia creating a cert-manager-dns01-tests sub domain with a TXT-record.
+
+**testdata/bin**:<br>
+Folder location for the test-binaries.
+
+`cert-manager-webhook-loopia` has been tested for conformance, not only simple create/delete TXT-record but also in Strict/Extended mode where multiple simultaneus TXT-records are tested.
 
 [ACME DNS-01 challenge]: https://letsencrypt.org/docs/challenge-types/#dns-01-challenge
 [ACME documentation]: https://cert-manager.io/docs/configuration/acme
@@ -282,8 +282,5 @@ TEST_ZONE_NAME=example.com. go test -v .
 [Loopia Customer Zone]: https://www.loopia.com/login
 [Loopia API]: https://doc.livedns.loopia.com
 [Helm]: https://helm.sh
-[image tags]: https://hub.docker.com/r/bwolf/cert-manager-webhook-loopia
+[image tags]: https://hub.docker.com/repository/docker/identitry/cert-manager-webhook-loopia
 [Kubernetes]: https://kubernetes.io/
-[RBAC Authorization]: https://kubernetes.io/docs/reference/access-authn-authz/rbac
-[setting-nameservers-for-dns01-self-check]: https://cert-manager.io/docs/configuration/acme/dns01/#setting-nameservers-for-dns01-self-check
-[cert-manager-uninstall]: https://cert-manager.io/docs/installation/uninstall/kubernetes
