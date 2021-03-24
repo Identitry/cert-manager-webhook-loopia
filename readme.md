@@ -15,7 +15,7 @@
 
    2.1. [Prereqs](#prereqs)
 
-   2.2. [Install Cert-Manager](#cert-manager)
+   2.2. [Install Cert-Manager](#installcertmanager)
 
    2.3. [Install/Uninstall Loopia Webhook](#webhookinstall)
 
@@ -81,7 +81,7 @@ Before starting the installation of `cert-manager-webhook-loopia` the prerequisi
 You could of course use [Cert-Manager] and `cert-manager-webhook-loopia` on [Minikube](https://minikube.sigs.k8s.io/docs/), [Microk8s](https://microk8s.io/), [K3s](https://k3s.io/) or [Docker Desktop with Kubernetes enabled](https://www.docker.com/products/docker-desktop).
 The installation also require that you have registered for Loopia API credentials in the [Loopia CustomerZone](https://customerzone.loopia.com), these special credentials are required for `cert-manager-webhook-loopia` to work.
 
-<a name="prereqs"></a>
+<a name="installcertmanager"></a>
 
 ### 2.2. Install Cert-Manager
 The easiest way to install Cert-Manager is using Helm. For this Helm v3 needs to be installed already.
@@ -116,7 +116,7 @@ The `cert-manager-webhook-loopia` can be installed in multiple ways but the easi
 
     helm install cert-manager-webhook-loopia --namespace cert-manager --set image.tag=latest --set logLevel=2 deploy/cert-manager-webhook-loopia
 
-This will install a heml chart with the pre built image available in Docker Hub as identitry/cert-manager-webhook-loopia.
+This will install a helm chart with the pre built image available in Docker Hub as identitry/cert-manager-webhook-loopia.
 
 
 If you wish to uninstall `cert-manager-webhook-loopia` simply run this command:
@@ -124,14 +124,27 @@ If you wish to uninstall `cert-manager-webhook-loopia` simply run this command:
     helm uninstall cert-manager-webhook-loopia --namespace cert-manager
 
 
-<a name="#webhookusing"></a>
+<a name="webhookusing"></a>
 ## 3. Using the Loopia Webhook
 Ok, now you have probably installed `cert-manager-webhook-loopia`, it´s time to configure it for getting a certificate from Let´s Encrypt.
 
-<a name="#credentials"></a>
+<a name="credentials"></a>
 ### 3.1. Loopia API credential Secret
 
 In order to logon to the [Loopia API](https://www.loopia.com/api) you first need a set of credentials, as a customer with Loopia you can request these in the [Loopia Customer Zone](https://customerzone.loopia.com), the usual credentials we normally use to logon with Loopia wont work.
+
+---
+
+**Note:**
+Your Loopia API account requires these permissions:
+
+- addZoneRecord
+- getZoneRecords
+- removeZoneRecord
+- removeSubdomain
+
+---
+
 When we have the Loopia API credentials (username and password) we need to store these credentials safely within Kubernetes and Kubernetes has a special API object type, [Secret](https://kubernetes.io/docs/concepts/configuration/secret) that can be used for this.
 
 The Secret needs to be created in the "cert-manager" namespace, otherwise permissions needs to be given for cert-manager to use the Secret.
