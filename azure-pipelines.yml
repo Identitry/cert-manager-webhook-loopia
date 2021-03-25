@@ -1,7 +1,7 @@
 # File : azure-pipelines.yml
 
 trigger:
-  - master
+  - main
 
 variables:
 - group: 'cert-manager-webhook-loopia' # reference variable group
@@ -109,7 +109,3 @@ jobs:
       repository: '$(dockerOrg)/$(imageName)'
       command: 'buildAndPush'
       tags: 'latest'
-
-# TODO: Create Helm chart?
-
-# TODO: Push to Helm Repository?
