@@ -1,8 +1,8 @@
-[![Build Status](https://dev.azure.com/identitry/cert-manager-webhook-loopia/_apis/build/status/Identitry.cert-manager-webhook-loopia?branchName=main)](https://dev.azure.com/identitry/cert-manager-webhook-loopia/_build/latest?definitionId=9&branchName=main)\
-
 # Cert-Manager ACME webhook for Loopia (cert-manager-webhook-loopia)
 
 `cert-manager-webhook-loopia` is an ACME webhook for [Cert-Manager](https://cert-manager.io/) that allows for [Cert-Manager] to use `DNS-01` challenge against the [Loopia](https://loopia.com) DNS.
+
+[![Build Status](https://dev.azure.com/identitry/cert-manager-webhook-loopia/_apis/build/status/Identitry.cert-manager-webhook-loopia?branchName=main)](https://dev.azure.com/identitry/cert-manager-webhook-loopia/_build/latest?definitionId=9&branchName=main)
 
 ## Table of Contents
 
