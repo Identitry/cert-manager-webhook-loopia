@@ -77,6 +77,7 @@ jobs:
   # Remove testdata directory.
   # (https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/bash?view=azure-devops)
   - task: Bash@3
+    condition: always()
     displayName: 'Remove testdata directory'
     inputs:
       targetType: 'inline'
