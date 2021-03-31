@@ -174,7 +174,7 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 	}
 
 	// Clean up subdomain.
-	if len(zoneRecords) <= 0 {
+	if len(zoneRecords) <= 1 {
 		loopiaClient.RemoveSubDomain(domain, subdomain)
 	}
 
