@@ -160,7 +160,7 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 	// Get loopia records for subdomain.
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
 	if err != nil {
-		return fmt.Errorf("unable tot get zone records: %v", err)
+		return fmt.Errorf("unable to get zone records: %v", err)
 	}
 
 	// Loop records to get the one to delete, if found delete it...
@@ -168,14 +168,17 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		if zoneRecord.Type == "TXT" && zoneRecord.Value == ch.Key {
 			_, err := loopiaClient.RemoveZoneRecord(domain, subdomain, zoneRecord.ID)
 			if err != nil {
-				return fmt.Errorf("unable to create TXT record: %v", err)
+				return fmt.Errorf("unable to delete TXT record: %v", err)
 			}
 		}
 	}
 
 	// Clean up subdomain.
 	if len(zoneRecords) <= 1 {
-		loopiaClient.RemoveSubDomain(domain, subdomain)
+		_, err := loopiaClient.RemoveSubDomain(domain, subdomain)
+		if err != nil {
+			return fmt.Errorf("unable to remove sub domain: %v", err)
+		}
 	}
 
 	return nil
