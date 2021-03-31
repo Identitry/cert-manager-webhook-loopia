@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/jetstack/cert-manager v1.2.0
-	github.com/jonlil/loopia-go v0.0.0-20210331094504-acdd2dd22bb8
+	github.com/jonlil/loopia-go v0.0.0-20210331155254-32e2e91e84fb
 	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b // indirect
 	k8s.io/apiextensions-apiserver v0.20.4
 	k8s.io/apimachinery v0.20.4

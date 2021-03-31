@@ -99,7 +99,7 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	// Get loopia records for subdomain.
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
 	if err != nil {
-		return fmt.Errorf("unable tot get zone records: %v", err)
+		return fmt.Errorf("unable tot ge zone records: %v", err)
 	}
 
 	// Exit if record is already present by type and value.
@@ -155,7 +155,7 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 
 	// Split and format domain and sub domain values.
 	subdomain, domain := c.getDomainAndSubdomain(ch)
-	klog.V(6).Infof("present for subdomain=%s, domain=%s", subdomain, domain)
+	klog.V(6).Infof("cleanup for subdomain=%s, domain=%s", subdomain, domain)
 
 	// Get loopia records for subdomain.
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
@@ -177,7 +177,7 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 	if len(zoneRecords) <= 1 {
 		_, err := loopiaClient.RemoveSubDomain(domain, subdomain)
 		if err != nil {
-			return fmt.Errorf("unable to remove sub domain: %v", err)
+			return fmt.Errorf("unable to remove subdomain: %v", err)
 		}
 	}
 
