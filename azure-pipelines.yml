@@ -109,4 +109,6 @@ jobs:
       containerRegistry: 'dockerHub'
       repository: '$(dockerOrg)/$(imageName)'
       command: 'buildAndPush'
-      tags: 'latest'
+      tags: |
+        '1.0'
+        'latest'
