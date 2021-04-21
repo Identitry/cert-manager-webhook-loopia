@@ -101,5 +101,5 @@ jobs:
       repository: '$(dockerOrg)/$(imageName)'
       command: 'buildAndPush'
       tags: |
-        '1.0'
-        'latest'
+        1.0
+        latest
