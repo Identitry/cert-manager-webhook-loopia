@@ -233,7 +233,7 @@ func (c *loopiaDNSProviderSolver) getCredentials(cfg *loopiaDNSProviderConfig, n
 	klog.V(6).Infof("try to load secret `%s` with key `%s`", cfg.UsernameSecretKeyRef.Name, cfg.UsernameSecretKeyRef.Key)
 	usernameSecret, err := c.client.CoreV1().Secrets(namespace).Get(context.Background(), cfg.UsernameSecretKeyRef.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to load secret %q", namespace+"/"+cfg.UsernameSecretKeyRef.Name)
+		return nil, fmt.Errorf("failed to load secret %q: %s", namespace+"/"+cfg.UsernameSecretKeyRef.Name, err.Error())
 	}
 	if username, ok := usernameSecret.Data[cfg.UsernameSecretKeyRef.Key]; ok {
 		creds.Username = string(username)
@@ -245,7 +245,7 @@ func (c *loopiaDNSProviderSolver) getCredentials(cfg *loopiaDNSProviderConfig, n
 	klog.V(6).Infof("try to load secret `%s` with key `%s`", cfg.PasswordSecretKeyRef.Name, cfg.PasswordSecretKeyRef.Key)
 	passwordSecret, err := c.client.CoreV1().Secrets(namespace).Get(context.Background(), cfg.PasswordSecretKeyRef.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to load secret %q", namespace+"/"+cfg.PasswordSecretKeyRef.Name)
+		return nil, fmt.Errorf("failed to load secret %q: %s", namespace+"/"+cfg.PasswordSecretKeyRef.Name, err.Error())
 	}
 	if password, ok := passwordSecret.Data[cfg.PasswordSecretKeyRef.Key]; ok {
 		creds.Password = string(password)
