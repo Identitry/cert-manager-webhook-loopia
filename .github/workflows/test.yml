@@ -1,0 +1,55 @@
+name: test
+### Workflow for testing cert-manager-webhook-loopia ###
+### Tests are executed using a test-fixure supplied that build up a complete Kubernetes control plane ###
+
+# Run on push/pull request of Go-files in branch main.
+on: 
+  push:
+    branches: [main]
+    paths:
+      - '**.go'
+      - '**.mod'
+      - '**.sum'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**.go'
+      - '**.mod'
+      - '**.sum'
+      
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    # Download a specific version of the Go tool.
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16.4
+    
+    # Check out code.
+    - name: Check out code
+    - uses: actions/checkout@v2
+
+    # Get Go dependencies.
+    - name: Get dependencies
+      run: go mod download
+    
+    # Download and unpack required test binaries.
+    - name: Get test binaries
+      run: sh ./testdata/scripts/fetch-test-binaries.sh
+      
+    # Add real credentials to loopia-credentials.yaml.
+    - name: Apply credentials from secret
+    - env:
+        LOOPIA_USERNAME: ${{ secrets.LOOPIA_USERNAME }}
+        LOOPIA_PASSWORD: ${{ secrets.LOOPIA_PASSWORD }}
+    - run: |
+        sed -i -e "s/[LOOPIA USERNAME]/$LOOPIA_USERNAME/" testdata/loopia/loopia-credentials.yaml
+        sed -i -e "s/[LOOPIA PASSWORD]/$LOOPIA_PASSWORD/" testdata/loopia/loopia-credentials.yaml
+    
+    # Run conformance tests.
+    - name: Run tests
+      env:
+        TEST_ZONE_NAME: ${{ secrets.LOOPIA_TEST_ZONE_NAME }}.
+      run: go test -v
