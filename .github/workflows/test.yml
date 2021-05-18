@@ -4,6 +4,7 @@ name: test
 
 # Run on push/pull request of Go-files in branch main.
 on: 
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
