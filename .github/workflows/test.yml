@@ -29,7 +29,7 @@ jobs:
     
     # Check out code.
     - name: Check out code
-    - uses: actions/checkout@v2
+      uses: actions/checkout@v2
 
     # Get Go dependencies.
     - name: Get dependencies
@@ -41,10 +41,10 @@ jobs:
       
     # Add real credentials to loopia-credentials.yaml.
     - name: Apply credentials from secret
-    - env:
+      env:
         LOOPIA_USERNAME: ${{ secrets.LOOPIA_USERNAME }}
         LOOPIA_PASSWORD: ${{ secrets.LOOPIA_PASSWORD }}
-    - run: |
+      run: |
         sed -i -e "s/[LOOPIA USERNAME]/$LOOPIA_USERNAME/" testdata/loopia/loopia-credentials.yaml
         sed -i -e "s/[LOOPIA PASSWORD]/$LOOPIA_PASSWORD/" testdata/loopia/loopia-credentials.yaml
     
