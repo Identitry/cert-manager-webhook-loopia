@@ -71,14 +71,14 @@ func (c *loopiaDNSProviderSolver) Name() string {
 // This method should tolerate being called multiple times with the same value.
 // cert-manager itself will later perform a self check to ensure that the solver has correctly configured the DNS provider.
 func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
-	klog.V(2).Infof("call function Present: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
+	klog.V(2).Infof("Call function Present: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
 
 	// Load config.
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
 		return fmt.Errorf("unable to load config: %v", err)
 	}
-	klog.V(2).Infof("decoded configuration %v", cfg)
+	klog.V(2).Infof("Decoded configuration %v", cfg)
 
 	// Get credentials for connecting to Loopia.
 	creds, err := c.getCredentials(&cfg, ch.ResourceNamespace)
@@ -94,19 +94,19 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 
 	// Split and format domain and sub domain values.
 	subdomain, domain := c.getDomainAndSubdomain(ch)
-	klog.V(2).Infof("present for subdomain=%s, domain=%s", subdomain, domain)
+	klog.V(2).Infof("Extracted  subdomain=%s and domain=%s", subdomain, domain)
 
 	// Get loopia records for subdomain.
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
 	if err != nil {
-		klog.V(2).Infof("subdomain %s is not present, need to be created", subdomain)
+		klog.V(2).Infof("Subdomain %s is not present, needs to be created", subdomain)
 	} else {
-		klog.V(2).Infof("subdomain %s is already present, checking if TXT-record is present.", subdomain)
+		klog.V(2).Infof("Subdomain %s is already present, checking if txt-record is present.", subdomain)
 
 		// Exit if record is already present by type and value.
 		for _, zoneRecord := range zoneRecords {
 			if zoneRecord.Type == "TXT" && zoneRecord.Value == ch.Key {
-				klog.V(2).Infof("both TXT-record and value is present already, leaving")
+				klog.V(2).Infof("Both TXT-record and value is present already, leaving")
 				return nil
 			}
 		}
@@ -120,11 +120,12 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 		Priority: 0,
 	}
 
-	// Record isn't present, create it.
+	// Record isn't present, create it, subdomain is created automatically.
 	err = loopiaClient.AddZoneRecord(domain, subdomain, &record)
 	if err != nil {
-		return fmt.Errorf("unable to create TXT record: %v", err)
+		return fmt.Errorf("unable to create txt-record: %v", err)
 	}
+	klog.V(2).Infof("Created txt-record in %s subdomain", subdomain)
 
 	return nil
 }
@@ -136,7 +137,7 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
 func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	klog.V(2).Infof("call function CleanUp: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
+	klog.V(2).Infof("Call function CleanUp: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
 
 	// Load config.
 	cfg, err := loadConfig(ch.Config)
@@ -158,7 +159,7 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 
 	// Split and format domain and sub domain values.
 	subdomain, domain := c.getDomainAndSubdomain(ch)
-	klog.V(2).Infof("cleanup for subdomain=%s, domain=%s", subdomain, domain)
+	klog.V(2).Infof("Cleanup for subdomain=%s, domain=%s", subdomain, domain)
 
 	// Get loopia records for subdomain.
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
@@ -194,7 +195,7 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 // * provider accounts.
 // The stopCh can be used to handle early termination of the webhook, in cases where a SIGTERM or similar signal is sent to the webhook process.
 func (c *loopiaDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, _ <-chan struct{}) error {
-	klog.V(2).Infof("call function Initialize")
+	klog.V(2).Infof("Call function Initialize")
 	cl, err := kubernetes.NewForConfig(kubeClientConfig)
 	if err != nil {
 		return fmt.Errorf("unable to get k8s client: %v", err)
@@ -233,7 +234,7 @@ func (c *loopiaDNSProviderSolver) getCredentials(cfg *loopiaDNSProviderConfig, n
 	creds := credential{}
 
 	// Get Username.
-	klog.V(2).Infof("try to load secret `%s` with key `%s`", cfg.UsernameSecretKeyRef.Name, cfg.UsernameSecretKeyRef.Key)
+	klog.V(2).Infof("Trying to load secret `%s` with key `%s`", cfg.UsernameSecretKeyRef.Name, cfg.UsernameSecretKeyRef.Key)
 	usernameSecret, err := c.client.CoreV1().Secrets(namespace).Get(context.Background(), cfg.UsernameSecretKeyRef.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to load secret %q: %s", namespace+"/"+cfg.UsernameSecretKeyRef.Name, err.Error())
@@ -245,7 +246,7 @@ func (c *loopiaDNSProviderSolver) getCredentials(cfg *loopiaDNSProviderConfig, n
 	}
 
 	// Get Password.
-	klog.V(2).Infof("try to load secret `%s` with key `%s`", cfg.PasswordSecretKeyRef.Name, cfg.PasswordSecretKeyRef.Key)
+	klog.V(2).Infof("Trying to load secret `%s` with key `%s`", cfg.PasswordSecretKeyRef.Name, cfg.PasswordSecretKeyRef.Key)
 	passwordSecret, err := c.client.CoreV1().Secrets(namespace).Get(context.Background(), cfg.PasswordSecretKeyRef.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to load secret %q: %s", namespace+"/"+cfg.PasswordSecretKeyRef.Name, err.Error())
