@@ -38,7 +38,7 @@ jobs:
     
     # Download and unpack required test binaries.
     - name: Get test binaries
-      run: sh ./testdata/scripts/fetch-test-binaries.sh
+      run: curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v2.3.2/kubebuilder_2.32._linux_amd64.tar.gz | tar xvz --strip-components=1 -C testdata/
       
     # Add real credentials to loopia-credentials.yaml.
     - name: Apply credentials from secret
