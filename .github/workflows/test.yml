@@ -48,6 +48,7 @@ jobs:
       run: |
         sed -i -e "s/[LOOPIA USERNAME]/$LOOPIA_USERNAME/" testdata/loopia/loopia-credentials.yaml
         sed -i -e "s/[LOOPIA PASSWORD]/$LOOPIA_PASSWORD/" testdata/loopia/loopia-credentials.yaml
+        cat testdata/loopia/loopia-credentials.yaml
     
     # Run conformance tests.
     - name: Run tests
