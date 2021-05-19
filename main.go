@@ -99,7 +99,7 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	// Get loopia records for subdomain.
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
 	if err != nil {
-		return fmt.Errorf("unable to get zone records: %v", err)
+		klog.V(2).Infof("subdomain %s is not present", subdomain)
 	}
 
 	// Exit if record is already present by type and value.
