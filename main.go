@@ -12,7 +12,7 @@ import (
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
@@ -71,14 +71,14 @@ func (c *loopiaDNSProviderSolver) Name() string {
 // This method should tolerate being called multiple times with the same value.
 // cert-manager itself will later perform a self check to ensure that the solver has correctly configured the DNS provider.
 func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
-	klog.V(6).Infof("call function Present: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
+	klog.V(2).Infof("call function Present: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
 
-	// LOad config.
+	// Load config.
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
 		return fmt.Errorf("unable to load config: %v", err)
 	}
-	klog.V(6).Infof("decoded configuration %v", cfg)
+	klog.V(2).Infof("decoded configuration %v", cfg)
 
 	// Get credentials for connecting to Loopia.
 	creds, err := c.getCredentials(&cfg, ch.ResourceNamespace)
@@ -89,17 +89,17 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	// Initialize new Loopia client.
 	loopiaClient, err := loopia.New(creds.Username, creds.Password)
 	if err != nil {
-		return fmt.Errorf("could not initialize loopia client: %v", err)
+		return fmt.Errorf("could not initialize Loopia client: %v", err)
 	}
 
 	// Split and format domain and sub domain values.
 	subdomain, domain := c.getDomainAndSubdomain(ch)
-	klog.V(6).Infof("present for subdomain=%s, domain=%s", subdomain, domain)
+	klog.V(2).Infof("present for subdomain=%s, domain=%s", subdomain, domain)
 
 	// Get loopia records for subdomain.
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
 	if err != nil {
-		return fmt.Errorf("unable tot ge zone records: %v", err)
+		return fmt.Errorf("unable to get zone records: %v", err)
 	}
 
 	// Exit if record is already present by type and value.
@@ -133,7 +133,7 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
 func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	klog.V(6).Infof("call function CleanUp: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
+	klog.V(2).Infof("call function CleanUp: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
 
 	// Load config.
 	cfg, err := loadConfig(ch.Config)
@@ -155,7 +155,7 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 
 	// Split and format domain and sub domain values.
 	subdomain, domain := c.getDomainAndSubdomain(ch)
-	klog.V(6).Infof("cleanup for subdomain=%s, domain=%s", subdomain, domain)
+	klog.V(2).Infof("cleanup for subdomain=%s, domain=%s", subdomain, domain)
 
 	// Get loopia records for subdomain.
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
@@ -191,7 +191,7 @@ func (c *loopiaDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 // * provider accounts.
 // The stopCh can be used to handle early termination of the webhook, in cases where a SIGTERM or similar signal is sent to the webhook process.
 func (c *loopiaDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, _ <-chan struct{}) error {
-	klog.V(6).Infof("call function Initialize")
+	klog.V(2).Infof("call function Initialize")
 	cl, err := kubernetes.NewForConfig(kubeClientConfig)
 	if err != nil {
 		return fmt.Errorf("unable to get k8s client: %v", err)
@@ -230,10 +230,10 @@ func (c *loopiaDNSProviderSolver) getCredentials(cfg *loopiaDNSProviderConfig, n
 	creds := credential{}
 
 	// Get Username.
-	klog.V(6).Infof("try to load secret `%s` with key `%s`", cfg.UsernameSecretKeyRef.Name, cfg.UsernameSecretKeyRef.Key)
+	klog.V(2).Infof("try to load secret `%s` with key `%s`", cfg.UsernameSecretKeyRef.Name, cfg.UsernameSecretKeyRef.Key)
 	usernameSecret, err := c.client.CoreV1().Secrets(namespace).Get(context.Background(), cfg.UsernameSecretKeyRef.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to load secret %q", namespace+"/"+cfg.UsernameSecretKeyRef.Name)
+		return nil, fmt.Errorf("failed to load secret %q: %s", namespace+"/"+cfg.UsernameSecretKeyRef.Name, err.Error())
 	}
 	if username, ok := usernameSecret.Data[cfg.UsernameSecretKeyRef.Key]; ok {
 		creds.Username = string(username)
@@ -242,10 +242,10 @@ func (c *loopiaDNSProviderSolver) getCredentials(cfg *loopiaDNSProviderConfig, n
 	}
 
 	// Get Password.
-	klog.V(6).Infof("try to load secret `%s` with key `%s`", cfg.PasswordSecretKeyRef.Name, cfg.PasswordSecretKeyRef.Key)
+	klog.V(2).Infof("try to load secret `%s` with key `%s`", cfg.PasswordSecretKeyRef.Name, cfg.PasswordSecretKeyRef.Key)
 	passwordSecret, err := c.client.CoreV1().Secrets(namespace).Get(context.Background(), cfg.PasswordSecretKeyRef.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to load secret %q", namespace+"/"+cfg.PasswordSecretKeyRef.Name)
+		return nil, fmt.Errorf("failed to load secret %q: %s", namespace+"/"+cfg.PasswordSecretKeyRef.Name, err.Error())
 	}
 	if password, ok := passwordSecret.Data[cfg.PasswordSecretKeyRef.Key]; ok {
 		creds.Password = string(password)
