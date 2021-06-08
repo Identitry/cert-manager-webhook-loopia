@@ -25,7 +25,7 @@ func TestRunsSuite(t *testing.T) {
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),
 		dns.SetManifestPath("testdata/loopia"),
-		dns.SetPollInterval(time.Second*60),
+		dns.SetPollInterval(time.Second*180),
 		dns.SetPropagationLimit(time.Minute*30),
 	)
 
