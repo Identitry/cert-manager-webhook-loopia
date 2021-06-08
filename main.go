@@ -124,8 +124,14 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	err = loopiaClient.AddZoneRecord(domain, subdomain, &record)
 	if err != nil {
 		return fmt.Errorf("unable to create txt-record: %v", err)
+	} else {
+		// Verify the record has been created by checking it's id.
+		if record.ID != 0 {
+			klog.V(2).Infof("Successfully created txt-record in %s subdomain with id $i", subdomain, record.ID)
+		} else {
+			return fmt.Errorf("unexpected error: txt-record was not created: %v", err)
+		}
 	}
-	klog.V(2).Infof("Created txt-record in %s subdomain", subdomain)
 
 	return nil
 }
