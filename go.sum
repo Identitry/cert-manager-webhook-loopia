@@ -485,6 +485,8 @@ github.com/jonboulle/clockwork v0.1.0 h1:VKV+ZcuP6l3yW9doeqz6ziZGgcynBVQO+obU0+0
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
 github.com/jonlil/loopia-go v0.0.0-20210331190659-ff1ae8413d68 h1:L0laboa/xuoWRYXoLF7Pizn28J88rTASOVeVTygLnrU=
 github.com/jonlil/loopia-go v0.0.0-20210331190659-ff1ae8413d68/go.mod h1:Vkp4MTf4Pb8Lu5zPQSQB777pyKa2AJcJPBd7lLp/aNY=
+github.com/jonlil/loopia-go v0.0.0-20210527200300-23293e4c6c36 h1:dDla7M09HPLLoRomdOO9ATz0tSZS/ADjEI9ZU3REPhs=
+github.com/jonlil/loopia-go v0.0.0-20210527200300-23293e4c6c36/go.mod h1:Vkp4MTf4Pb8Lu5zPQSQB777pyKa2AJcJPBd7lLp/aNY=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/json-iterator/go v1.1.7/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/json-iterator/go v1.1.8/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=

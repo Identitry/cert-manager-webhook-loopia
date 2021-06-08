@@ -84,8 +84,6 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	creds, err := c.getCredentials(&cfg, ch.ResourceNamespace)
 	if err != nil {
 		return fmt.Errorf("unable to get credential: %v", err)
-	} else if creds.Username != "" && creds.Password != "" {
-		klog.V(2).Infof("Successfully extracted Loopia API credentials.")
 	}
 
 	// Initialize new Loopia client.
@@ -102,16 +100,6 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	zoneRecords, err := loopiaClient.GetZoneRecords(domain, subdomain)
 	if err != nil {
 		klog.V(2).Infof("Subdomain %s is not present, needs to be created", subdomain)
-
-		// Subdomain not present, create it.
-		status, err := loopiaClient.AddSubdomain(domain, subdomain)
-		if err != nil {
-			return fmt.Errorf("unexpected error: unable to create subdomain: %v", err)
-		} else if status.Status == "failed" {
-			return fmt.Errorf("unable to create subdomain: %s %v", status.Cause, err)
-		} else if status.Status == "success" {
-			klog.V(2).Infof("Subdomain %s successfully created.", subdomain)
-		}
 	} else {
 		klog.V(2).Infof("Subdomain %s is already present, checking if txt-record is present.", subdomain)
 
@@ -140,7 +128,7 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 
 		// Verify the record has been created by checking it's id.
 		if record.ID != 0 {
-			klog.V(2).Infof("Successfully created txt-record in %s subdomain with id $i", subdomain, record.ID)
+			klog.V(2).Infof("Successfully created txt-record in %s subdomain", subdomain)
 		} else {
 			return fmt.Errorf("unexpected error: txt-record was not created: %v", err)
 		}
