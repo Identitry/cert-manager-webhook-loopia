@@ -84,6 +84,8 @@ func (c *loopiaDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	creds, err := c.getCredentials(&cfg, ch.ResourceNamespace)
 	if err != nil {
 		return fmt.Errorf("unable to get credential: %v", err)
+	} else if creds.Username != "" && creds.Password != "" {
+		klog.V(2).Infof("Successfully extracted Loopia API credentials.")
 	}
 
 	// Initialize new Loopia client.
