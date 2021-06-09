@@ -2,55 +2,62 @@ name: test
 ### Workflow for testing cert-manager-webhook-loopia ###
 ### Tests are executed using a test-fixure supplied that build up a complete Kubernetes control plane ###
 
-# Run on push/pull request of Go-files in branch main.
-on: 
+# Run on push/pull request of Go-files in branch main or manually.
+on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - '**.go'
-      - '**.mod'
-      - '**.sum'
+      - "**.go"
+      - "**.mod"
+      - "**.sum"
   pull_request:
     branches: [main]
     paths:
-      - '**.go'
-      - '**.mod'
-      - '**.sum'
-      
+      - "**.go"
+      - "**.mod"
+      - "**.sum"
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    # Download a specific version of the Go tool.
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.16.4
-    
-    # Check out code.
-    - name: Check out code
-      uses: actions/checkout@v2
+      # Echo...
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
 
-    # Get Go dependencies.
-    - name: Get dependencies
-      run: go mod download
-    
-    # Download and unpack required test binaries.
-    - name: Get test binaries
-      run: sh ./testdata/scripts/fetch-test-binaries.sh
-      
-    # Add real credentials to loopia-credentials.yaml.
-    - name: Apply credentials from secret
-      env:
-        LOOPIA_USERNAME: ${{ secrets.LOOPIA_USERNAME }}
-        LOOPIA_PASSWORD: ${{ secrets.LOOPIA_PASSWORD }}
-      run: |
-        sed -i -e "s/\[LOOPIA USERNAME\]/$LOOPIA_USERNAME/" testdata/loopia/loopia-credentials.yaml
-        sed -i -e "s/\[LOOPIA PASSWORD\]/$LOOPIA_PASSWORD/" testdata/loopia/loopia-credentials.yaml
-    
-    # Run conformance tests.
-    - name: Run tests
-      env:
-        TEST_ZONE_NAME: ${{ secrets.LOOPIA_TEST_ZONE_NAME }}.
-      run: go test -v
+      # Download a specific version of the Go tool.
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16.5
+
+      # Check out code.
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      # Get Go dependencies.
+      - name: Get dependencies
+        run: go mod download
+
+      # Download and unpack required test binaries.
+      - name: Get test binaries
+        run: sh ./testdata/scripts/fetch-test-binaries.sh
+
+      # Add real credentials to loopia-credentials.yaml.
+      - name: Apply credentials from secret
+        env:
+          LOOPIA_USERNAME: ${{ secrets.LOOPIA_USERNAME }}
+          LOOPIA_PASSWORD: ${{ secrets.LOOPIA_PASSWORD }}
+        run: |
+          sed -i -e "s/\[LOOPIA USERNAME\]/$LOOPIA_USERNAME/" testdata/loopia/loopia-credentials.yaml
+          sed -i -e "s/\[LOOPIA PASSWORD\]/$LOOPIA_PASSWORD/" testdata/loopia/loopia-credentials.yaml
+
+      # Run conformance tests.
+      - name: Run tests
+        env:
+          # Note the trailing ".", this means the LOOPIA_TEST_ZONE_NAME should not have a trailing ".".
+          TEST_ZONE_NAME: ${{ secrets.LOOPIA_TEST_ZONE_NAME }}.
+          TEST_STRICT_MODE: "false"
+        run: go test -v

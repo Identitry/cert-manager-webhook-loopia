@@ -114,10 +114,12 @@ Note that it might take a minute or two before all pods are running.
 
 ### 2.3. Install/Uninstall Loopia Webhook
 
-The `cert-manager-webhook-loopia` can be installed in multiple ways but the easiest is using helm. First you need to have this repository pulled locally then you can run this command from the root folder:
+The `cert-manager-webhook-loopia` can be installed in multiple ways but the easiest is using helm:
 
 ```shell
-helm install cert-manager-webhook-loopia --namespace cert-manager --set image.tag=latest --set logLevel=2 deploy/cert-manager-webhook-loopia
+helm repo add identitry https://identitry.github.io/cert-manager-webhook-loopia
+helm repo update
+helm install cert-manager-webhook-loopia identitry/cert-manager-webhook-loopia --namespace cert-manager
 ```
 
 This will install a helm chart with the pre built image available in Docker Hub as identitry/cert-manager-webhook-loopia.
