@@ -11,7 +11,12 @@ on:
       - '*'
     branches:
       - main
-
+    paths:
+      - "**.go"
+      - "**.mod"
+      - "**.sum"
+      - "**.yaml"
+      - "Dockerfile"
 jobs:
   # Run tests.
   test:
