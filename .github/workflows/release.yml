@@ -65,13 +65,16 @@ jobs:
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
 
-      # Get tag and store it in RELEASE_VERSION env variable.
-      - name: Set RELEASE_VERSION env
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: Test RELEASE_VERSION env
-        run: |
-          echo $RELEASE_VERSION
-          echo ${{ env.RELEASE_VERSION }}
+      # Check out code, required to get latest tag.
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      # Get latest tag
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: 1.1.0 # Optional fallback tag to use when no tag can be found
 
       # Get GITHUB_REPOSITORY and lowercase it to GITHUB_REPOSITORY_LC env variable.
       - name: Set GITHUB_REPOSITORY_LC env
@@ -104,7 +107,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ env.GITHUB_REPOSITORY_LC }}:latest, ${{ env.GITHUB_REPOSITORY_LC }}:${{ env.RELEASE_VERSION }}
+          tags: ${{ env.GITHUB_REPOSITORY_LC }}:latest, ${{ env.GITHUB_REPOSITORY_LC }}:${{ steps.previoustag.outputs.tag }}
 
   # Build helm chart and push to GitHub Pages (depends on teststrict).
   release_helmchart:
