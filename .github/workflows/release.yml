@@ -12,8 +12,8 @@ on:
     branches: [main]
 
 jobs:
-  # Run tests in strict mode.
-  teststrict:
+  # Run tests.
+  test:
     runs-on: ubuntu-latest
     steps:
       # Echo...
@@ -52,12 +52,12 @@ jobs:
       - name: Run tests
         env:
           TEST_ZONE_NAME: ${{ secrets.LOOPIA_TEST_ZONE_NAME }}.
-          TEST_STRICT_MODE: "true"
+          TEST_STRICT_MODE: "false"
         run: go test -v
 
   # Build docker image and push to Docker Hub (depends on teststrict).
   release_docker:
-    needs: teststrict
+    needs: test
     runs-on: ubuntu-latest
     steps:
       # Echo...
@@ -108,7 +108,7 @@ jobs:
 
   # Build helm chart and push to GitHub Pages (depends on teststrict).
   release_helmchart:
-    needs: teststrict
+    needs: test
     runs-on: ubuntu-latest
     steps:
 
