@@ -1,5 +1,9 @@
 # Cert-Manager ACME webhook for Loopia (cert-manager-webhook-loopia)
 
+> [!WARNING]
+> This repository is in urgent need of some TLC but lack of time and interest makes me the wrong person to handle it.
+> If you feel that you are the right person to give it some maintenence, please fork it and let me know and I'll add a reference to the new repository.  
+
 `cert-manager-webhook-loopia` is an ACME webhook for [Cert-Manager](https://cert-manager.io/) that allows for [Cert-Manager] to use `DNS-01` challenge against the [Loopia](https://loopia.com) DNS.
 
 [![test](https://github.com/Identitry/cert-manager-webhook-loopia/actions/workflows/test.yml/badge.svg)](https://github.com/Identitry/cert-manager-webhook-loopia/actions/workflows/test.yml)
